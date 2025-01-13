@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from dotenv import load_dotenv
+import random
 
 
 load_dotenv()
@@ -50,7 +51,13 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "silk",
     "backend",
+    "social_auth",
 ]
+
+AUTHENTICATION_BACKENDS = (
+    "social_auth.backends.contrib.github.GithubBackend",
+    "django.contrib.auth.backends.ModelBackend",
+)
 
 MIDDLEWARE = [
     "silk.middleware.SilkyMiddleware",
@@ -62,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 ROOT_URLCONF = "orders.urls"
 
@@ -76,6 +84,9 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.core.context_processors.request",
+                "social_auth.context_processors.social_auth_by_name_backends"
+
             ],
         },
     },
@@ -189,3 +200,44 @@ For more information, visit https://github.com/alina-vorontsova/python-final-dip
 
 CELERY_BROKER_URL = os.getenv("CELERY_BACKEND")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_BROKER")
+
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
+GITHUB_API_SECRET = os.getenv("GITHUB_API_SECRET")
+
+# Если имя не удалось получить, то можно его сгенерировать
+SOCIAL_AUTH_DEFAULT_USERNAME = lambda: random.choice(['Darth_Vader', 'Obi-Wan_Kenobi', 'R2-D2', 'C-3PO', 'Yoda'])
+
+# Разрешаем авторизовать пользователей через social_auth
+SOCIAL_AUTH_CREATE_USERS = True
+
+# Перечислим pipeline, которые последовательно буду обрабатывать response
+SOCIAL_AUTH_PIPELINE = (
+
+    # Получает по backend и uid social_user и user
+    'social_auth.backends.pipeline.social.social_auth_user',
+
+    # Получает по user.email инстанс пользователя и заменяет собой тот, который получили выше.
+    'social_auth.backends.pipeline.associate.associate_by_email',
+
+    # Пытается собрать правильный username, на основе уже имеющихся данных
+    'social_auth.backends.pipeline.user.get_username',
+
+    # Создает нового пользователя, если такого еще нет
+    'social_auth.backends.pipeline.user.create_user',
+
+    # Пытается связать аккаунты
+    'social_auth.backends.pipeline.social.associate_user',
+
+    # Получает и обновляет social_user.extra_data
+    'social_auth.backends.pipeline.social.load_extra_data',
+
+    # Обновляет инстанс user дополнительными данными с бекенда
+    'social_auth.backends.pipeline.user.update_user_details'
+)
+
+SOCIAL_AUTH_PROVIDERS = [
+    {'id': p[0], 'name': p[1], 'position': {'width': p[2][0], 'height': p[2][1], }}
+    for p in (
+        ('github', u'Login via GitHub', (0, -70)),
+    )
+]

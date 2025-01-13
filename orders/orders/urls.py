@@ -68,4 +68,6 @@ urlpatterns = [
         name="redoc",
     ),
     path("silk/", include("silk.urls", namespace="silk")),
+    path("r", include("social_auth.urls"))
 ]
+
