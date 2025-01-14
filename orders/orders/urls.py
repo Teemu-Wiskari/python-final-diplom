@@ -68,6 +68,8 @@ urlpatterns = [
         name="redoc",
     ),
     path("silk/", include("silk.urls", namespace="silk")),
-    path("r", include("social_auth.urls"))
+    path("r", include("social_auth.urls")),
+    path(r"jet/", include("jet.urls", "jet")), # Django JET URLS
+    path(r"jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")), # Django JET dashboard URLS
+    path(r"admin/", include("admin.site.urls")),
 ]
-
