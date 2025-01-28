@@ -247,11 +247,11 @@ class BasketView(APIView):
 
 class OrderConfirmationView(APIView):
     """Подтверждение заказа от пользователя
-    и отправка эл.письма с подтверждением заказа."""
+    и отправка эл. письма с подтверждением заказа."""
 
     def post(self, request, *args, **kwargs):
         """Получить потверждение заказа от пользователя
-        и отправить эл.письмо с подтверждением заказа."""
+        и отправить эл. письмо с подтверждением заказа."""
 
         permission_classes = [IsAuthenticated]
         order = Order.objects.get(user_id=request.user.id, state="new")
@@ -263,3 +263,10 @@ class OrderConfirmationView(APIView):
             return JsonResponse({"Status": True})
         elif action == "disapprove":
             return JsonResponse({"Status": "Now you can change your order"})
+
+
+class TriggerError(APIView):
+    """ Тестовый класс для проверки работы Sentry """
+    permission_classes = [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+        raise ValueError("Test error")

@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from dotenv import load_dotenv
-import random
 
 
 load_dotenv()
@@ -41,6 +40,7 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "jet.dashboard",
     "jet",
+    # 'baton',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -51,16 +51,13 @@ INSTALLED_APPS = [
     "django_filters",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "social_django",
     "silk",
+    "imagekit",
     "backend",
-    "social_auth",
-    "versatileimagefield",
+    # 'baton.autodiscover',
+    'cachalot',
 ]
-
-AUTHENTICATION_BACKENDS = (
-    "social_auth.backends.contrib.github.GithubBackend",
-    "django.contrib.auth.backends.ModelBackend",
-)
 
 MIDDLEWARE = [
     "silk.middleware.SilkyMiddleware",
@@ -72,7 +69,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 ROOT_URLCONF = "orders.urls"
 
@@ -87,9 +83,9 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "django.core.context_processors.request",
-                "social_auth.context_processors.social_auth_by_name_backends"
-
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
+                "django.template.context_processors.request",
             ],
         },
     },
@@ -204,77 +200,43 @@ For more information, visit https://github.com/alina-vorontsova/python-final-dip
 CELERY_BROKER_URL = os.getenv("CELERY_BACKEND")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_BROKER")
 
-GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
-GITHUB_API_SECRET = os.getenv("GITHUB_API_SECRET")
 
-# Если имя не удалось получить, то можно его сгенерировать
-SOCIAL_AUTH_DEFAULT_USERNAME = lambda: random.choice(['Darth_Vader', 'Obi-Wan_Kenobi', 'R2-D2', 'C-3PO', 'Yoda'])
+# Настройки для social-auth-app-django
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
-# Разрешаем авторизовать пользователей через social_auth
-SOCIAL_AUTH_CREATE_USERS = True
-
-# Перечислим pipeline, которые последовательно буду обрабатывать response
-SOCIAL_AUTH_PIPELINE = (
-
-    # Получает по backend и uid social_user и user
-    'social_auth.backends.pipeline.social.social_auth_user',
-
-    # Получает по user.email инстанс пользователя и заменяет собой тот, который получили выше.
-    'social_auth.backends.pipeline.associate.associate_by_email',
-
-    # Пытается собрать правильный username, на основе уже имеющихся данных
-    'social_auth.backends.pipeline.user.get_username',
-
-    # Создает нового пользователя, если такого еще нет
-    'social_auth.backends.pipeline.user.create_user',
-
-    # Пытается связать аккаунты
-    'social_auth.backends.pipeline.social.associate_user',
-
-    # Получает и обновляет social_user.extra_data
-    'social_auth.backends.pipeline.social.load_extra_data',
-
-    # Обновляет инстанс user дополнительными данными с бекенда
-    'social_auth.backends.pipeline.user.update_user_details'
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.twitter.TwitterOAuth',
+    'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_PROVIDERS = [
-    {'id': p[0], 'name': p[1], 'position': {'width': p[2][0], 'height': p[2][1], }}
-    for p in (
-        ('github', u'Login via GitHub', (0, -70)),
-    )
-]
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.social_user',
+    'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'social_core.pipeline.social_auth.load_extra_data',
+    'social_core.pipeline.user.user_details',
+)
 
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['username', 'first_name', 'email']
 
+# Настройки для Sentry
+import sentry_sdk
 
-# Настройки для django-versatileimagefield
-VERSATILEIMAGEFIELD_SETTINGS = {
-    'cache_length': 2592000,
-    'cache_name': 'versatileimagefield_cache',
-    'jpeg_resize_quality': 70,
-    'sized_directory_name': '__sized__',
-    'filtered_directory_name': '__filtered__',
-    'placeholder_directory_name': '__placeholder__',
-    'create_images_on_demand': True,
-    'image_key_post_processor': None,
-    'progressive_jpeg': False
-}
+SENTRY_DSN = os.getenv("SENTRY_DSN")
 
-
-# Рендереры изображений
-VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
-    'image_gallery': [
-        ('gallery_large', 'crop__800x450'),
-        ('gallery_square_small', 'crop__50x50')
-    ],
-    'primary_image_detail': [
-        ('hero', 'crop__600x283'),
-        ('social', 'thumbnail__800x800')
-    ],
-    'primary_image_list': [
-        ('list', 'crop__400x225'),
-    ],
-    'headshot': [
-        ('headshot_small', 'crop__150x175'),
-    ]
-}
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    _experiments={
+        # Set continuous_profiling_auto_start to True
+        # to automatically start the profiler on when
+        # possible.
+        "continuous_profiling_auto_start": True,
+    },
+)

@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+# from baton.autodiscover import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from drf_spectacular.views import (
@@ -33,6 +34,7 @@ from orders.backend.views import (
     UserRegisterView,
     Login,
     ContactView,
+    TriggerError,
 )
 
 
@@ -43,7 +45,10 @@ router.register(r"products", ProductView, basename="products")
 router.register(r"orders", OrderView, basename="orders")
 
 urlpatterns = [
+    path(r'jet/', include('jet.urls', 'jet')),
+    path(r'jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     path("admin/", admin.site.urls),
+    # path('baton/', include('baton.urls')),
     path("register/", UserRegisterView.as_view(), name="register"),
     path("login/", Login.as_view(), name="login"),
     path("get_contact/", ContactView.as_view(), name="get_contact_info"),
@@ -68,8 +73,6 @@ urlpatterns = [
         name="redoc",
     ),
     path("silk/", include("silk.urls", namespace="silk")),
-    path("r", include("social_auth.urls")),
-    path(r"jet/", include("jet.urls", "jet")), # Django JET URLS
-    path(r"jet/dashboard/", include("jet.dashboard.urls", "jet-dashboard")), # Django JET dashboard URLS
-    path(r"admin/", include("admin.site.urls")),
+    path('auth/', include('social_django.urls', namespace='social')),
+    path('sentry-debug/', TriggerError.as_view()),
 ]

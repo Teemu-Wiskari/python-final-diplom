@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from imagekit.models import ImageSpecField
+from pilkit.processors import ResizeToFill
 
 
 class OrderStateChoices(models.TextChoices):
@@ -28,7 +30,6 @@ class UserManager(BaseUserManager):
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
-        """Создать и сохранить пользователя."""
         if not email:
             raise ValueError("The given email must be set")
         email = self.normalize_email(email)
@@ -38,13 +39,11 @@ class UserManager(BaseUserManager):
         return user
 
     def create_user(self, email, password=None, **extra_fields):
-        """Создать и сохранить пользователя с ролью 'shop'."""
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
-        """Создать и сохранить пользователя с ролью 'superuser'."""
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -188,7 +187,11 @@ class ProductInfo(models.Model):
     quantity = models.PositiveIntegerField(verbose_name="Количество")
     price = models.PositiveIntegerField(verbose_name="Цена")
     price_rrc = models.PositiveIntegerField(verbose_name="Рекомендуемая розничная цена")
-
+    product_avatar = models.ImageField(upload_to='avatars', null=True)
+    product_avatar_thumbnail = ImageSpecField(source='avatar',
+                                      processors=[ResizeToFill(100, 50)],
+                                      format='JPEG',
+                                      options={'quality': 60})
     class Meta:
         verbose_name = "Информация о товаре"
         verbose_name_plural = "Информационные листы о товаре"
@@ -277,7 +280,11 @@ class Contact(models.Model):
         max_length=15, verbose_name="Квартира", null=True, blank=True
     )
     phone = models.CharField(max_length=20, verbose_name="Телефон")
-
+    avatar = models.ImageField(upload_to='avatars', null=True)
+    avatar_thumbnail = ImageSpecField(source='avatar',
+                                      processors=[ResizeToFill(100, 50)],
+                                      format='JPEG',
+                                      options={'quality': 60})
     class Meta:
         verbose_name = "Контакты пользователя"
         verbose_name_plural = "Список контактов пользователя"
