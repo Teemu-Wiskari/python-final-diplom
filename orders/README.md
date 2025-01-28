@@ -1,11 +1,20 @@
-### Запуск проекта: 
+### К проекту были выполнены дополнительные задачи:
 
- - Создать виртуальное окружение, установить зависимости, поменять значения в `orders/.env`
- - Создать базу данных:
+ - Авторизация через соцсети
+ - Тюнинг админки
+ - Celery + обработка изображений (асинхронная загрузка, миниатюры)
+ - Внедрение Sentry (мониторинг ошибок)
+ - Кэширование с Redis (ускорение работы БД)
+
+
+Запуск проекта: 
+
+1. Создать виртуальное окружение, установить зависимости, при необходимости поменять значения в `orders/.env`
+2. Создать базу данных 
 ```bash
 createdb -U postgres diploma
 ```
- - Провести миграции:
+3. Провести миграции 
 ```bash
 python orders/manage.py migrate
 ```
@@ -13,21 +22,27 @@ python orders/manage.py migrate
 ```bash
 python orders/manage.py collectstatic
 ```
- - Запустить redis:
+4. Запустить redis
 ```bash
 redis-server
 redis-cli
 ```
- - Запустить celery:
+5. Запустить celery 
 ```bash
 celery -A orders.orders worker --loglevel=info
 ```
- - Запустить приложение:
+6. Запустить приложение 
 ```bash 
 python orders/manage.py runserver
 ```
- - Посылать запросы на сервер можно через готовую коллекцию [postman-collection](../postman_collection.json)
- - Запустить тесты:
+7. Посылать запросы на сервер можно через готовую коллекцию [postman-collection](../postman_collection.json)
+8. Запустить тесты
 ```bash
 pytest
 ```
+9. Настройка Sentry 
+   * Зарегистрируйтесь на https://sentry.io/
+   * Выберите SDK для Django
+   * Вставьте полученное значение DSN в .env файл
+   * Перейдите по адресу http://localhost:8000/sentry-debug/
+   * Проверьте трассировку ошибок Sentry в личном кабинете
